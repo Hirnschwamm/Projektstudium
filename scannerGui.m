@@ -22,7 +22,7 @@ function varargout = scannerGui(varargin)
 
 % Edit the above text to modify the response to help scannerGui
 
-% Last Modified by GUIDE v2.5 17-Dec-2016 18:45:28
+% Last Modified by GUIDE v2.5 05-Mar-2017 21:41:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,11 +53,6 @@ function scannerGui_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to scannerGui (see VARARGIN)
 
 handles.redMin = 0;
-handles.redMax = 255;
-handles.greenMin = 0;
-handles.greenMax = 255;
-handles.blueMin = 0;
-handles.blueMax = 255;
 handles.cameraParams = calibrateCamera();
 handles.inverseIntrinsicCameraMatrix = inv(handles.cameraParams.IntrinsicMatrix);
 
@@ -102,12 +97,20 @@ if(isfield(handles, 'CurrentWebcam'))
     handles.CurrentImage = maskRGB;
     points = extractLineFromRGBMask(maskRGB);
     cameraPoints = getCameraCoordinates(image, points, handles);
-    FindZCoordinate(image, cameraPoints, handles);
+    worldPoints = GetPointsInXYZSpace(image, cameraPoints, handles);
     
-    %axes(handles.ImagePanel);   
-    %imshow(handles.CurrentImage);
-    %hold on;
-    %plot(points(:,1),points(:,2), 'x', 'color', 'white');
+    rotation = rotate3d;
+    rotation.Enable = 'on';
+    
+    axes(handles.ImagePanel);
+    imshow(handles.CurrentImage);
+    hold on;
+    plot(points(:,1),points(:,2), 'x', 'color', 'white'); 
+    setAllowAxesRotate(rotation,handles.ImagePanel,false);
+   
+    axes(handles.PointCloudPanel);
+    scatter3(worldPoints(:,1), worldPoints(:,2), worldPoints(:,3),'.');
+    
     guidata(hObject, handles);
 end
 
@@ -115,93 +118,6 @@ function chooseActiveWebcam(hObject, eventdata, handles)
 handles.CurrentWebcam = webcam(hObject.Label);
 handles.WebcamNameDisplayText.String = hObject.Label;
 guidata(hObject, handles);
-
-
-% --- Executes on slider movement.
-function maxThresholdSliderGreen_Callback(hObject, eventdata, handles)
-% hObject    handle to maxThresholdSliderGreen (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-handles.greenMax = 255 - (get(hObject, 'Value') * 255);
-guidata(hObject, handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function maxThresholdSliderGreen_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to maxThresholdSliderGreen (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes on slider movement.
-function maxThreshholdSliderRed_Callback(hObject, eventdata, handles)
-% hObject    handle to maxThreshholdSliderRed (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-handles.redMax = 255 - (get(hObject, 'Value') * 255);
-guidata(hObject, handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function maxThreshholdSliderRed_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to maxThreshholdSliderRed (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes on slider movement.
-function maxThresholdSliderBlue_Callback(hObject, eventdata, handles)
-% hObject    handle to maxThresholdSliderBlue (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-handles.blueMax = 255 - (get(hObject, 'Value') * 255);
-guidata(hObject, handles);
-
-
-
-% --- Executes during object creation, after setting all properties.
-function maxThresholdSliderBlue_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to maxThresholdSliderBlue (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes on slider movement.
-function minThresholdSliderRed_Callback(hObject, eventdata, handles)
-% hObject    handle to minThresholdSliderRed (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-handles.redMin = get(hObject, 'Value') * 255;
-guidata(hObject, handles);
-
 
 % --- Executes during object creation, after setting all properties.
 function minThresholdSliderRed_CreateFcn(hObject, eventdata, handles)
@@ -214,49 +130,6 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
 
-
-% --- Executes on slider movement.
-function minThresholdSliderGreen_Callback(hObject, eventdata, handles)
-% hObject    handle to minThresholdSliderGreen (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-handles.greenMin = get(hObject, 'Value') * 255;
+function minThresholdSliderRed_Callback(hObject, eventdata, handles)
+handles.redMin = get(hObject, 'value') * 255;
 guidata(hObject, handles);
-
-% --- Executes during object creation, after setting all properties.
-function minThresholdSliderGreen_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to minThresholdSliderGreen (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes on slider movement.
-function minThresholdSliderBlue_Callback(hObject, eventdata, handles)
-% hObject    handle to minThresholdSliderBlue (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-handles.blueMin = get(hObject, 'Value') * 255;
-guidata(hObject, handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function minThresholdSliderBlue_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to minThresholdSliderBlue (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end

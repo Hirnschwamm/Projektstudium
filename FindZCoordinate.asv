@@ -1,0 +1,19 @@
+function [ ] = FindZCoordinate(currentSnapshot, coordinatesInXYPlane, handles )
+
+squareSize = 20;
+[currentImagePoints, boardSize] = detectCheckerboardPoints(currentSnapshot);
+worldPoints = generateCheckerboardPoints(boardSize, squareSize);
+[R, t] = extrinsics(currentImagePoints, worldPoints, handles.cameraParams);
+
+planeNormal = [0 0 1];
+laserPosition = t - [0 0 120];
+for i = 1:size(coordinatesInXYPlane, 1)
+    cameraDirection = [coordinatesInXYPlane 1] - t;
+    planePosition = ;
+    
+end
+
+
+
+end
+

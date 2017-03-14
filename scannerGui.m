@@ -22,7 +22,7 @@ function varargout = scannerGui(varargin)
 
 % Edit the above text to modify the response to help scannerGui
 
-% Last Modified by GUIDE v2.5 05-Mar-2017 21:41:35
+% Last Modified by GUIDE v2.5 14-Mar-2017 20:29:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,6 +55,7 @@ function scannerGui_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.redMin = 0;
 handles.cameraParams = calibrateCamera();
 handles.inverseIntrinsicCameraMatrix = inv(handles.cameraParams.IntrinsicMatrix);
+handles.objectPoints = [];
 
 camlist = webcamlist;
 for c = camlist'
@@ -95,24 +96,57 @@ if(isfield(handles, 'CurrentWebcam'))
     image = snapshot(handles.CurrentWebcam);
     [maskBlackWhite, maskRGB] = createMask(image, handles);
     handles.CurrentImage = maskRGB;
-    points = extractLineFromRGBMask(maskRGB);
-    cameraPoints = getCameraCoordinates(image, points, handles);
-    worldPoints = GetPointsInXYZSpace(image, cameraPoints, handles);
+    scanLinePoints = extractLineFromRGBMask(maskRGB);
+    cameraPoints = getXYCameraCoordinates(scanLinePoints, handles);
+    worldPoints = getXYZCameraCoordinates(cameraPoints, str2double(get(handles.offsetEdit, 'String')) + 1);
     
-    rotation = rotate3d;
-    rotation.Enable = 'on';
-    
-    axes(handles.ImagePanel);
-    imshow(handles.CurrentImage);
-    hold on;
-    plot(points(:,1),points(:,2), 'x', 'color', 'white'); 
-    setAllowAxesRotate(rotation,handles.ImagePanel,false);
-   
-    axes(handles.PointCloudPanel);
-    scatter3(worldPoints(:,1), worldPoints(:,2), worldPoints(:,3),'.');
+    plotImageAndScanLine(handles.ImagePanel, handles.CurrentImage, scanLinePoints);
+    plotPoints(handles.PointCloudPanel, worldPoints);
     
     guidata(hObject, handles);
 end
+
+% --- Executes on button press in acquireImageAndSave.
+function acquireImageAndSave_Callback(hObject, eventdata, handles)
+% hObject    handle to acquireImageAndSave (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if(isfield(handles, 'CurrentWebcam'))
+    image = snapshot(handles.CurrentWebcam);
+    [maskBlackWhite, maskRGB] = createMask(image, handles);
+    handles.CurrentImage = maskRGB;
+    scanLinePoints = extractLineFromRGBMask(maskRGB);
+    cameraPoints = getXYCameraCoordinates(scanLinePoints, handles);
+    worldPoints = getXYZCameraCoordinates(cameraPoints, str2double(get(handles.offsetEdit, 'String')) + 1);
+    handles.objectPoints = vertcat(handles.objectPoints, worldPoints);
+    
+    plotImageAndScanLine(handles.ImagePanel, handles.CurrentImage, scanLinePoints);
+    plotPoints(handles.PointCloudPanel, handles.objectPoints);
+    set(handles.offsetEdit, 'String', num2str((str2double(get(handles.offsetEdit, 'String')) + 1)));
+    guidata(hObject, handles);
+end
+
+function plotImageAndScanLine(axesHandle, image, scanlinePoints)
+rotation = rotate3d;
+rotation.Enable = 'on';
+axes(axesHandle);
+imshow(image);
+hold on;
+plot(scanlinePoints(:,1),scanlinePoints(:,2), 'x', 'color', 'white'); 
+setAllowAxesRotate(rotation,axesHandle,false);
+
+function plotPoints(axesHandle, points)
+axes(axesHandle);
+cla();
+axis([-600 600 -3000 3000 120 160]);
+hold(axesHandle,'on')
+grid on;
+set(gca,'Color',[1.0 1.0 1.0]);
+scatter3(points(:,1), points(:,3), points(:,2), '.');
+xlabel('X');
+ylabel('Z');
+zlabel('Y');
+
 
 function chooseActiveWebcam(hObject, eventdata, handles)
 handles.CurrentWebcam = webcam(hObject.Label);
@@ -133,3 +167,26 @@ end
 function minThresholdSliderRed_Callback(hObject, eventdata, handles)
 handles.redMin = get(hObject, 'value') * 255;
 guidata(hObject, handles);
+
+
+
+function offsetEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to offsetEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of offsetEdit as text
+%        str2double(get(hObject,'String')) returns contents of offsetEdit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function offsetEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to offsetEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

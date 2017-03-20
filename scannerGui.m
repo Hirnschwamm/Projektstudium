@@ -22,7 +22,7 @@ function varargout = scannerGui(varargin)
 
 % Edit the above text to modify the response to help scannerGui
 
-% Last Modified by GUIDE v2.5 14-Mar-2017 20:29:57
+% Last Modified by GUIDE v2.5 20-Mar-2017 21:11:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -117,12 +117,13 @@ if(isfield(handles, 'CurrentWebcam'))
     handles.CurrentImage = maskRGB;
     scanLinePoints = extractLineFromRGBMask(maskRGB);
     cameraPoints = getXYCameraCoordinates(scanLinePoints, handles);
-    worldPoints = getXYZCameraCoordinates(cameraPoints, str2double(get(handles.offsetEdit, 'String')) + 1);
+    offset = str2double(get(handles.offsetEdit, 'String')) + str2double(get(handles.offsetIntervalEdit, 'String'));
+    worldPoints = getXYZCameraCoordinates(cameraPoints, offset);
     handles.objectPoints = vertcat(handles.objectPoints, worldPoints);
     
     plotImageAndScanLine(handles.ImagePanel, handles.CurrentImage, scanLinePoints);
     plotPoints(handles.PointCloudPanel, handles.objectPoints);
-    set(handles.offsetEdit, 'String', num2str((str2double(get(handles.offsetEdit, 'String')) + 1)));
+    set(handles.offsetEdit, 'String', num2str(offset));
     guidata(hObject, handles);
 end
 
@@ -138,7 +139,7 @@ setAllowAxesRotate(rotation,axesHandle,false);
 function plotPoints(axesHandle, points)
 axes(axesHandle);
 cla();
-axis([-600 600 -3000 3000 120 160]);
+axis([-40 40 0 100 120 160]);
 hold(axesHandle,'on')
 grid on;
 set(gca,'Color',[1.0 1.0 1.0]);
@@ -182,6 +183,29 @@ function offsetEdit_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function offsetEdit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to offsetEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function offsetIntervalEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to offsetIntervalEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of offsetIntervalEdit as text
+%        str2double(get(hObject,'String')) returns contents of offsetIntervalEdit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function offsetIntervalEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to offsetIntervalEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

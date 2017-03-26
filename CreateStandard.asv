@@ -1,0 +1,13 @@
+function [ pixelCoordinates ] = SelectPixelSpline( image )
+%CREATESTANDARD returns the pixel coordinates of a manually specified spline
+%   The function returns a two x by 2 matrix of pixel coordinates in the given image
+%   where the caller specifies a spline by selecting at least two points in the image.
+%   The first coloumn of pixelCoordinates specifies the image coloumn
+%   (x-coordinate) and the second the image row (y-coordinate) of a point
+%   on the spline. 
+ imshow(image);
+ [x y] = getpts();
+ imageXCoor = x(1) : x(length(x));
+ imageYCoordinates = spline(x,y,xx);
+end
+

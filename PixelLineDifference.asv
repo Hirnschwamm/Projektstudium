@@ -1,0 +1,29 @@
+function [ difference ] = PixelLineDifference( lineA, lineB )
+%PIXELLINEDIFFERENCE Returns a measure to compare the likeness of two pixel
+%lines in a given image
+%The x-coordinates of both pixellines should be sorted in ascending order.
+%To prevent disparities between the lines due to unequal length, only
+%coordinates are compared that share the same x-coordinates
+firstCoordinateLineA = lineA(1);
+firstCoordinateLineB = lineB(1);
+if firstCoordinateLineA(1) < firstCoordinateLineB(1)
+    earlierLine = lineA;
+    laterLine = lineB;
+else
+    earlierLine = lineB;
+    laterLine = lineA;
+end
+
+for i = 1:size(earlierLine, 1)
+    for j = i
+        
+        
+        
+    if earlierLine(i, 1) == laterLine(i, 1)
+        gatheredDifferences(i) = abs(earlierLine(i, 2) - laterLine(i, 2));
+    end
+end
+
+difference = mean(gatheredDifferences);
+end
+

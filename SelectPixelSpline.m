@@ -1,4 +1,4 @@
-function [ pixelCoordinates ] = SelectPixelSpline( image, plotSpline )
+function [ pixelCoordinates ] = SelectPixelSpline( image, plotSpline)
 %SELECTPIXELSPLINE Returns the pixel coordinates of a manually specified spline
 %   The function returns a x by 2 matrix of pixel coordinates in the given image
 %   where the caller specifies a spline by selecting at least two points in the image.
@@ -10,8 +10,8 @@ function [ pixelCoordinates ] = SelectPixelSpline( image, plotSpline )
  end
  imageWidth = size(image, 2);
  imageHeight = size(image, 1);
- imshow(image);
  [x, y] = getpts();
+ x = floor(x); %to prevent "floating point" coloumns if user is zoomed in too close
  imageXCoordinates = x(1) : x(length(x));
  imageYCoordinates = spline(x,y,imageXCoordinates);
  pixelCoordinates = [imageXCoordinates' imageYCoordinates'];

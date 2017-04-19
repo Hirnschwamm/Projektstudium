@@ -1,4 +1,4 @@
-function [ threshold ] = FindOptimalThreshold( image, optimalPixelLine, colorspace)
+function [ threshold, bestDifference ] = FindOptimalThreshold( image, optimalPixelLine, colorspace)
 %FINDOPTIMALTHRESHOLDYCBCR Returns the optimal threshold Cr-threshold for
 %extracting the laser line
 threshold = 0;

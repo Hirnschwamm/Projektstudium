@@ -22,7 +22,7 @@ function varargout = MeasureUtilityGUI(varargin)
 
 % Edit the above text to modify the response to help MeasureUtilityGUI
 
-% Last Modified by GUIDE v2.5 17-Apr-2017 22:39:52
+% Last Modified by GUIDE v2.5 19-Apr-2017 19:22:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes MeasureUtilityGUI wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+%uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -99,7 +99,7 @@ optimalLine = SelectPixelSpline(image);
 close;
 handles.CurrentlyProcessingRadio.Value = 1;
 drawnow();
-handles.ColourThreshhold = FindOptimalThreshold(image, optimalLine, 'ycbcr');
+[handles.ColourThreshhold, diff] = FindOptimalThreshold(image, optimalLine, 'ycbcr');
 
 maskYCbCr = MaskImageViaYCbCrThreshold(image, handles.ColourThreshhold);
 extractedLineYCbCr = extractLineFromMaskedImage(maskYCbCr);
@@ -107,6 +107,7 @@ handles.OptimalBandwidth = FindOptimalBandwidth(image, optimalLine, extractedLin
 
 handles.ColourThreshholdText.String = ['Min Cr-Threshhold: ', num2str(handles.ColourThreshhold)];
 handles.BandwidthText.String = ['Optimal Bandwidth: ', num2str(handles.OptimalBandwidth)];
+handles.BestDifferenceText.String = ['Distance: ', num2str(diff)];
 handles.CurrentlyProcessingRadio.Value = 0;
 guidata(hObject, handles);
 
@@ -164,3 +165,13 @@ handles.CameraParams = load(cameraParamsPath);
 handles.CameraParams = handles.CameraParams.cameraParams;
 handles.CurrentCameraParamsText.String = ['Current Camera Params: ', cameraParamsPath];
 guidata(hObject, handles);
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+delete(hObject);

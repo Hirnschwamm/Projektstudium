@@ -16,7 +16,7 @@ for sampleFile = files'
     end
     currentImage = imread(strcat(folderPath, '/', sampleFile.name));
     maskYCbCr = MaskImageViaYCbCrThreshold(currentImage, colourThreshhold);
-    extractedLineYCbCr = extractLineFromMaskedImage(maskYCbCr);
+    extractedLineYCbCr = extractLineFromMaskedImage(maskYCbCr, currentImage);
     if fitFunctionToPixelLine
         extractedLineYCbCr = GaussianKernelRegression(extractedLineYCbCr, bandwidth);
     end

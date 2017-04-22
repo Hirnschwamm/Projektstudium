@@ -9,7 +9,7 @@ for i = 0.0:0.01:1.0
     elseif strcmp(colorspace, 'rgb')
         currentMask = MaskImageViaRGBThreshold(image, i);
     end
-    currentExtractedLine = extractLineFromMaskedImage(currentMask);
+    currentExtractedLine = extractLineFromMaskedImage(currentMask, image);
     currentDifference = PixelLineDifference(optimalPixelLine, currentExtractedLine, size(image, 1));
     if currentDifference < bestDifference
         threshold = i;

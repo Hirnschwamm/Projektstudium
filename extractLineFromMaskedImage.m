@@ -1,7 +1,6 @@
-function [ points ] = extractLineFromMaskedImage( maskedImage )
+function [ points ] = extractLineFromMaskedImage( maskedImage, unmaskedImage )
 [rows, cols, channels] = size(maskedImage);
 grayScaleMask = rgb2gray(maskedImage);
-i = 1;
 points = [];
 for c = 1:cols
     mu = 0;
@@ -12,10 +11,22 @@ for c = 1:cols
         summedWeights = summedWeights + weight;
     end
     mu = mu / summedWeights;
+    
+   
     if mu > 0
-        points(i, 1) = c;
-    	points(i, 2) = max(mu, 0);
-        i = i + 1;
+        %points2 = [points2; c max(mu, 0)];
+        
+        preliminaryLaserMiddle = max(mu, 0);
+        
+        mu = 0;
+        summedWeights = 0;
+        for r = floor(preliminaryLaserMiddle) - 10 : floor(preliminaryLaserMiddle) + 10
+            weight = double(unmaskedImage(r, c, 1));
+            mu = mu + r * weight;  
+            summedWeights = summedWeights + weight;
+        end
+        mu = mu / summedWeights;
+        points = [points; c max(mu, 0)];
     end
 end
 end

@@ -102,7 +102,7 @@ drawnow();
 [handles.ColourThreshhold, diff] = FindOptimalThreshold(image, optimalLine, 'ycbcr');
 
 maskYCbCr = MaskImageViaYCbCrThreshold(image, handles.ColourThreshhold);
-extractedLineYCbCr = extractLineFromMaskedImage(maskYCbCr);
+extractedLineYCbCr = extractLineFromMaskedImage(maskYCbCr, image);
 handles.OptimalBandwidth = FindOptimalBandwidth(image, optimalLine, extractedLineYCbCr, 0.1);
 
 handles.ColourThreshholdText.String = ['Min Cr-Threshhold: ', num2str(handles.ColourThreshhold)];

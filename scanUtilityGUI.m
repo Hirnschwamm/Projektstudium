@@ -52,8 +52,9 @@ function scanUtilityGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to scannerGui (see VARARGIN)
 
-handles.currentImageNumber = 0;
+handles.currentImageNumber = 0; %running count for the images taken so far
 
+%get all available webcams and save them in a menu, so the user choose
 camlist = webcamlist;
 for c = camlist'
     uimenu(handles.MenuWebcams, 'Label', strjoin(c), 'Callback',{@chooseActiveWebcam handles});
@@ -83,6 +84,7 @@ function varargout = scanUtilityGUI_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 function chooseActiveWebcam(hObject, eventdata, handles)
+%Specifies which webcam should be used to shoot the images
 handles.CurrentWebcam = webcam(hObject.Label);
 handles.WebcamNameDisplayText.String = hObject.Label;
 guidata(hObject, handles);
@@ -101,7 +103,11 @@ function snaphotButton_Callback(hObject, eventdata, handles)
 % hObject    handle to snaphotButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+% shoots an image with the chosen camera and saves it with a suiting name
+% in the specified folder.
 image = snapshot(handles.CurrentWebcam);
+%write the image as a png file and increment the running number to keep
+%track how many images there are already
 imwrite(image, strcat(handles.CurrentImageDirectory, '/img', sprintf('%03d', handles.currentImageNumber), '.png'));
 imshow(image);
 handles.currentImageNumber = handles.currentImageNumber + 1;
@@ -113,6 +119,8 @@ function MenuImageFolder_Callback(hObject, eventdata, handles)
 % hObject    handle to MenuImageFolder (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+% This function lets the user specify the folder in which images should be
+% written
 handles.CurrentImageDirectory = uigetdir();
 guidata(hObject, handles);
 
@@ -122,6 +130,8 @@ function saveCalibrationButton_Callback(hObject, eventdata, handles)
 % hObject    handle to saveCalibrationButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+% This function takes a snapshot and saves it with the name for the
+% calibration image in the specified folder.
 image = snapshot(handles.CurrentWebcam);
 imwrite(image, strcat(handles.CurrentImageDirectory, '/imgCalibration.png'));
 imshow(image);

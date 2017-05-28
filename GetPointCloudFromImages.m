@@ -1,10 +1,13 @@
-function [ pointCloud ] = GetPointCloudFromImages( folderPath, colourThreshhold, cameraParams, cameraRotation, cameraTranslation, offset, fitFunctionToPixelLine, bandwidth )
-%GETPOINTSCLOUDFROMIMAGES Summary of this function goes here
-%   Detailed explanation goes here
+function [ pointCloud ] = GetPointCloudFromImages( folderPath, colourThreshhold, cameraParams, cameraRotation, cameraTranslation, offset)
+%GETPOINTSCLOUDFROMIMAGES Processes all images in the specified folder,
+%extracts the laserline and computes world coordinates for points on the
+%laserline
+
 currentCameraTranslation = cameraTranslation;
-files = dir(folderPath);
+files = dir(folderPath); %Get all files from the specified path
 pointCloud = [];
 i = 0;
+%Loop through every so obtained image
 for sampleFile = files'
     %Ignore the self file, the precursor file, any files that dont end with .png and the calibration image 
     if(strcmp(sampleFile.name,'.') || ...
@@ -14,17 +17,20 @@ for sampleFile = files'
        
         continue;
     end
+    %Read the current image, mask it via the specified Cr-Threshold and
+    %extract the laserline in the form of image coordinates from it
     currentImage = imread(strcat(folderPath, '/', sampleFile.name));
     maskYCbCr = MaskImageViaYCbCrThreshold(currentImage, colourThreshhold);
     extractedLineYCbCr = extractLineFromMaskedImage(maskYCbCr, currentImage);
-    if fitFunctionToPixelLine
-        extractedLineYCbCr = GaussianKernelRegression(extractedLineYCbCr, bandwidth);
-    end
     
+    %Convert the image coordinates of the laserline first to camera
+    %coordinates and then to world coordinates. Add the offset of the
+    %camera onto the z-axis of the computed world coorinates
     cameraCoordinates = ImagePointsToCameraCoordinates(extractedLineYCbCr, cameraParams);
     worldCoordinates = CameraCoordinatesToWorldCoordinates(cameraCoordinates, cameraRotation, currentCameraTranslation);
     worldCoordinates(:,3) = worldCoordinates(:,3) + i * -offset;
     
+    %Add the computed world coordinates to the pointcloud
     if isempty(pointCloud)
         pointCloud = worldCoordinates;
     else 

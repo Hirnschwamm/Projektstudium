@@ -1,6 +1,7 @@
 function [ ] = PlotPointCloud( pc )
-%GETPOINTCLOUDANDPLOTIT Summary of this function goes here
-%   Detailed explanation goes here
+%GETPOINTCLOUDANDPLOTIT Plots a point cloud via plot3
+%   This function sets up the axes object to diplay the point cloud
+%   correctly
 plot3(pc(:,1), pc(:,2), pc(:,3), '.');
 axis([0 190 -30 130 -120 0]);
 set(gca,'Zdir','reverse');

@@ -78,6 +78,9 @@ function CalibrateExtrinsicsButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CalibrateExtrinsicsButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Reads the calibration image taken with scanUtility and computes the
+% extrinsic camera parameters
 handles.CurrentlyProcessingRadio.Value = 1;
 drawnow();
 image = imread(strcat(handles.CurrentImageDirectory, '/imgCalibration.png'));
@@ -92,21 +95,25 @@ function CalibrateColourButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CalibrateColourButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Reads the first image from the dataset and allows the user to choose
+% specify a spline running through the laser line. From this the global
+% colour threshold is computed
+
+% Read the first image from the data set and display it in a new window
 image = imread(strcat(handles.CurrentImageDirectory, '/img000.png'));
 figure;
 imshow(image);
+% Get the optimal manually specified pixel line
 optimalLine = SelectPixelSpline(image);
 close;
 handles.CurrentlyProcessingRadio.Value = 1;
 drawnow();
-[handles.ColourThreshhold, diff] = FindOptimalThreshold(image, optimalLine, 'ycbcr');
+%Find the optimal threshold
+[handles.ColourThreshhold, diff] = FindOptimalThreshold(image, optimalLine);
 
-maskYCbCr = MaskImageViaYCbCrThreshold(image, handles.ColourThreshhold);
-extractedLineYCbCr = extractLineFromMaskedImage(maskYCbCr, image);
-handles.OptimalBandwidth = FindOptimalBandwidth(image, optimalLine, extractedLineYCbCr, 0.1);
-
+%Display results in textboxes
 handles.ColourThreshholdText.String = ['Min Cr-Threshhold: ', num2str(handles.ColourThreshhold)];
-handles.BandwidthText.String = ['Optimal Bandwidth: ', num2str(handles.OptimalBandwidth)];
 handles.BestDifferenceText.String = ['Distance: ', num2str(diff)];
 handles.CurrentlyProcessingRadio.Value = 0;
 guidata(hObject, handles);
@@ -117,16 +124,20 @@ function GeneratePointCloudButton_Callback(hObject, eventdata, handles)
 % hObject    handle to GeneratePointCloudButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Reads all images from the data set, extracts the laserline, and computes 
+% corresponding world coordinates
+
 handles.CurrentlyProcessingRadio.Value = 1;
 drawnow();
+% Read all images and process them to get a pointcloud
 handles.PointCloud = GetPointCloudFromImages(handles.CurrentImageDirectory, ...
                                              handles.ColourThreshhold, ...
                                              handles.CameraParams, ...
                                              handles.CameraRotation, ...
                                              handles.CameraTranslation, ...
-                                             str2num(handles.ZOffsetEdit.String), ...
-                                             handles.FitPixelLinesCheck.Value, ...
-                                             handles.OptimalBandwidth);
+                                             str2num(handles.ZOffsetEdit.String));
+% Display the point cloud and save it
 PlotPointCloud(handles.PointCloud);
 handles.PointCloud = handles.output;
 handles.CurrentlyProcessingRadio.Value = 0;
@@ -137,6 +148,10 @@ function MenuImageDirectory_Callback(hObject, eventdata, handles)
 % hObject    handle to MenuImageDirectory (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Gets called when a user wants to specify the directory of the data set
+
+% Prompt the user for a directory and save the chosen path
 handles.CurrentImageDirectory = uigetdir();
 handles.CurrentImageDirText.String = ['Current Image Dir: ', handles.CurrentImageDirectory];
 guidata(hObject, handles);
@@ -160,6 +175,12 @@ function MenuLoadCameraParams_Callback(hObject, eventdata, handles)
 % hObject    handle to MenuLoadCameraParams (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Gets called when the user wants to specify the location of the
+% cameraParams.mat file in the file system
+
+% Prompt the location of the file, load it into memory, and save it in the
+% handles object
 cameraParamsPath = uigetfile();
 handles.CameraParams = load(cameraParamsPath);
 handles.CameraParams = handles.CameraParams.cameraParams;

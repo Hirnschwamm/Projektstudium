@@ -55,6 +55,7 @@ function scanUtilityGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.currentImageNumber = 0; %running count for the images taken so far
 
 %get all available webcams and save them in a menu, so the user choose
+%which to use
 camlist = webcamlist;
 for c = camlist'
     uimenu(handles.MenuWebcams, 'Label', strjoin(c), 'Callback',{@chooseActiveWebcam handles});
